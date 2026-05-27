@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} - PyLearn{% endblock %}
+
+{% block content %}
+<div class="lesson-page">
+    <div class="lesson-header">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Буцах</a>
+        <h1>{{ lesson.title }}</h1>
+    </div>
+    
+    <div class="lesson-content">
+        <div class="content-section">
+            <h2>Learn</h2>
+            <div class="lesson-text">
+                {{ lesson.content | safe }}
+            </div>
+        </div>
+        
+        <div class="code-section">
+            <h2>Жишээ код</h2>
+            <pre><code>{{ lesson.code_example }}</code></pre>
+        </div>
+    </div>
+    
+        {% if lesson.quizzes|length %}
+        <div class="quiz-section">
+            <h2>Хичээлийн асуултууд</h2>
+            {% for quiz in lesson.quizzes %}
+            <div class="quiz-card" data-quiz-id="{{ quiz.id }}">
+                <div class="quiz-question">{{ quiz.question }}</div>
+                <div class="quiz-options">
+                    {% for opt in quiz.options %}
+                    <button class="quiz-option btn-outline" data-idx="{{ loop.index0 }}">{{ opt }}</button>
+                    {% endfor %}
+                </div>
+                <div class="quiz-feedback" aria-live="polite"></div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if next_lesson %}
+        <div class="next-lesson">
+            <a href="{{ url_for('lesson', lesson_id=next_lesson.id) }}" class="btn btn-primary">
+                Next Lesson: {{ next_lesson.title }} →
+            </a>
+        </div>
+        {% endif %}
+</div>
+
+<style>
+.lesson-page { padding: 30px; max-width: 100%; margin: 0 auto; }
+.lesson-header { margin-bottom: 30px; }
+.back-btn { color: #667eea; text-decoration: none; margin-bottom: 15px; display: inline-block; }
+.lesson-header h1 { margin: 15px 0 0 0; }
+
+.lesson-content {
+    display: grid;
+    gap: 30px;
+    margin: 0 auto;
+    padding: 0;
+    max-width: 1200px;
+}
+
+.content-section, .code-section {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.lesson-text {
+    line-height: 1.8;
+    color: #444;
+}
+
+.lesson-text ul {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.lesson-text li {
+    margin: 8px 0;
+}
+
+.code-section pre {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+/* Quiz styles */
+.quiz-section { margin-top: 30px; }
+.quiz-card { background: #fff; padding: 18px; border-radius:8px; border:1px solid #eee; margin-bottom:14px; }
+.quiz-question { font-weight:700; margin-bottom:10px; }
+.quiz-options { display:flex; gap:10px; flex-wrap:wrap; }
+.quiz-option { padding:8px 12px; border-radius:8px; cursor:pointer; }
+.quiz-option.correct { background:#e6ffed; border:1px solid #34d399; color:#064e3b; }
+.quiz-option.wrong { background:#ffe6e6; border:1px solid #f97373; color:#7f1d1d; }
+.quiz-feedback { margin-top:10px; color:#374151; }
+
+.next-lesson {
+    text-align: center;
+    margin-top: 30px;
+}
+</style>
+<script>
+// Quiz handling: submit answer via existing /quiz/<id> POST route
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.quiz-card').forEach(card => {
+        const quizId = card.dataset.quizId;
+        const options = card.querySelectorAll('.quiz-option');
+        const feedback = card.querySelector('.quiz-feedback');
+
+        options.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (card.classList.contains('answered')) return;
+                const idx = btn.dataset.idx;
+                try {
+                    const form = new FormData();
+                    form.append('answer', idx);
+                    const res = await fetch('/quiz/' + quizId, { method: 'POST', body: form });
+                    const data = await res.json();
+
+                    // mark correct/incorrect
+                    options.forEach(o => {
+                        const i = o.dataset.idx;
+                        if (parseInt(i) === data.correct_answer) {
+                            o.classList.add('correct');
+                        }
+                    });
+
+                    if (data.correct) {
+                        btn.classList.add('correct');
+                        feedback.innerHTML = `<div style="color:#065f46;font-weight:600;">Зөв! +${data.xp_earned} XP</div><div style="margin-top:6px;color:#374151;">${data.explanation || ''}</div>`;
+                    } else {
+                        btn.classList.add('wrong');
+                        feedback.innerHTML = `<div style="color:#7f1d1d;font-weight:600;">Буруу</div><div style="margin-top:6px;color:#374151;">${data.explanation || ''}</div>`;
+                    }
+
+                    card.classList.add('answered');
+                } catch (e) {
+                    feedback.textContent = 'Алдаа: Сүлжээ эсвэл сервертэй холбогдож чадсангүй.';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

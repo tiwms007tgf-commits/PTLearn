@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - PyLearn{% endblock %}
+
+{% block content %}
+<div class="quiz-page">
+    <div class="quiz-container">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Буцах</a>
+        
+        <div class="quiz-card">
+            <h2>{{ quiz.question }}</h2>
+            
+            <form id="quizForm" method="POST">
+                <div class="options">
+                    {% for option in quiz.options %}
+                    <label class="option-label">
+                        <input type="radio" name="answer" value="{{ loop.index0 }}" required>
+                        <span class="option-text">{{ option }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-large">Хариулт оруулах</button>
+            </form>
+        </div>
+        
+        <div id="result" class="result-box" style="display: none;">
+            <div id="resultContent"></div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{{ url_for("quiz", quiz_id=quiz.id) }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        
+        if (data.correct) {
+            resultContent.innerHTML = `
+                <div class="success-box">
+                    <h2>✅ Correct!</h2>
+                    <p>${data.explanation}</p>
+                    <p class="xp-reward">+${data.xp_earned} XP earned!</p>
+                </div>
+            `;
+            triggerConfetti();
+        } else {
+            resultContent.innerHTML = `
+                <div class="error-box">
+                    <h2>❌ Incorrect</h2>
+                    <p>${data.explanation}</p>
+                    <p>Try the next question!</p>
+                </div>
+            `;
+        }
+        
+        document.getElementById('quizForm').style.display = 'none';
+        resultDiv.style.display = 'block';
+    });
+});
+
+function triggerConfetti() {
+    // Simple confetti animation
+    for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.delay = Math.random() * 0.5 + 's';
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 3000);
+    }
+}
+</script>
+
+<style>
+.quiz-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.quiz-container {
+    width: 100%;
+    max-width: 600px;
+}
+
+.back-btn {
+    color: #667eea;
+    text-decoration: none;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.quiz-card {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.quiz-card h2 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.option-label:hover {
+    border-color: #667eea;
+    background: #f9f9f9;
+}
+
+.option-label input[type="radio"] {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.option-text {
+    cursor: pointer;
+}
+
+.result-box {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.success-box {
+    background: #f0fdf4;
+    color: #22c55e;
+    padding: 30px;
+    border-radius: 10px;
+}
+
+.error-box {
+    background: #fef2f2;
+    color: #ef4444;
+    padding: 30px;
+    border-radius: 10px;
+}
+
+.xp-reward {
+    font-weight: bold;
+    font-size: 1.2em;
+    animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    animation: fall 3s ease-out forwards;
+}
+
+@keyframes fall {
+    to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+</style>
+{% endblock %}

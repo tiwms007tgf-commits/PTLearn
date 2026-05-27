@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyLearn — Python Хэл Суралцах</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c1a;
+      --bg2: #0d1229;
+      --blue: #4f8ef7;
+      --purple: #a855f7;
+      --blue-light: #93c5fd;
+      --purple-light: #d8b4fe;
+      --text: #f1f5ff;
+      --muted: #8b9cc8;
+      --glass: rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.1);
+      --glow-blue: rgba(79,142,247,0.25);
+      --glow-purple: rgba(168,85,247,0.25);
+      --radius: 20px;
+      --font: 'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Orbs ── */
+    .orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-1 { width: 50vw; height: 50vw; top: -15%; left: -15%; background: var(--glow-blue); animation-delay: 0s; }
+    .orb-2 { width: 45vw; height: 45vw; bottom: -10%; right: -10%; background: var(--glow-purple); animation-delay: -3s; }
+    .orb-3 { width: 30vw; height: 30vw; top: 40%; left: 55%; background: rgba(79,142,247,0.12); animation-delay: -5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.04); }
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 70px;
+      background: rgba(8,12,26,0.6);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-logo svg { flex-shrink: 0; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav {
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: #fff !important;
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { width: 24px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
+
+    /* ── Section base ── */
+    section { position: relative; z-index: 1; }
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 5%; }
+
+    /* ── Fade-in ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ── Shared headings ── */
+    .section-label {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+      background: rgba(79,142,247,0.12);
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 100px;
+      padding: 5px 16px;
+      margin-bottom: 18px;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+    .grad-text {
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Glass card ── */
+    .glass-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      transition: transform 0.25s, background 0.25s, box-shadow 0.25s;
+    }
+    .glass-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 20px 60px rgba(79,142,247,0.12);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 100px;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: #fff;
+      box-shadow: 0 8px 30px rgba(79,142,247,0.35);
+    }
+    .btn-primary:hover { box-shadow: 0 12px 40px rgba(79,142,247,0.5); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--glass-border);
+    }
+    .btn-outline:hover { background: var(--glass); }
+
+    /* ─────────────────────────────────────────
+       HERO
+    ───────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 70px;
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      width: 100%;
+    }
+    .hero-text { }
+    .hero-title {
+      font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 22px;
+    }
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 480px;
+      line-height: 1.75;
+      margin-bottom: 36px;
+    }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    /* Code terminal */
+    .terminal {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(79,142,247,0.2), 0 0 0 1px var(--glass-border);
+    }
+    .terminal::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(135deg, rgba(79,142,247,0.3), rgba(168,85,247,0.3));
+      border-radius: calc(var(--radius) + 2px);
+      z-index: -1;
+    }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #12182e;
+      border-bottom: 1px solid var(--glass-border);
+      gap: 8px;
+    }
+    .term-dots { display: flex; gap: 6px; }
+    .term-dots span { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f56; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #27c93f; }
+    .term-title { margin-left: auto; margin-right: auto; font-size: 0.8rem; color: var(--muted); font-family: monospace; }
+    .term-body {
+      background: #0f1626;
+      padding: 24px 28px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 2;
+      min-height: 140px;
+    }
+    .term-body .kw { color: #c792ea; }
+    .term-body .str { color: #c3e88d; }
+    .term-body .fn { color: #82aaff; }
+    .term-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.1em;
+      background: rgba(255,255,255,0.7);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ─────────────────────────────────────────
+       WHAT IS PYTHON
+    ───────────────────────────────────────── */
+    #what {
+      padding: 100px 0;
+    }
+    .what-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .usage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .usage-item {
+      padding: 20px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .usage-item .icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.3rem;
+    }
+
+    /* ─────────────────────────────────────────
+       WHY LEARN
+    ───────────────────────────────────────── */
+    #why {
+      padding: 100px 0;
+      background: linear-gradient(180deg, transparent, rgba(79,142,247,0.04), transparent);
+    }
+    .why-header { text-align: center; margin-bottom: 60px; }
+    .why-header .section-sub { margin: 0 auto; }
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .why-card {
+      padding: 30px;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .why-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(168,85,247,0.15));
+      border: 1px solid rgba(79,142,247,0.2);
+    }
+    .why-card h3 { font-size: 1.05rem; font-weight: 700; }
+    .why-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+    /* ─────────────────────────────────────────
+       ADVANTAGES
+    ───────────────────────────────────────── */
+    #advantages { padding: 100px 0; }
+    .adv-header { text-align: center; margin-bottom: 60px; }
+    .adv-header .section-sub { margin: 0 auto; }
+    .adv-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .adv-item {
+      padding: 22px 26px;
+      border-radius: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .adv-check {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 0.75rem;
+      color: #fff;
+      font-weight: 700;
+    }
+    .adv-item h4 { font-size: 0.98rem; font-weight: 700; margin-bottom: 4px; }
+    .adv-item p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+    /* ─────────────────────────────────────────
+       REAL WORLD
+    ───────────────────────────────────────── */
+    #real { padding: 100px 0; }
+    .real-header { text-align: center; margin-bottom: 60px; }
+    .real-header .section-sub { margin: 0 auto; }
+    .real-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .real-card {
+      padding: 30px;
+      border-radius: var(--radius);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .real-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, rgba(79,142,247,0.12), rgba(168,85,247,0.12));
+      border: 1px solid var(--glass-border);
+    }
+    .real-card h3 { font-size: 1.05rem; font-weight: 700; }
+    .real-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ─────────────────────────────────────────
+       CODE DEMO
+    ───────────────────────────────────────── */
+    #code-demo { padding: 100px 0; }
+    .code-header { text-align: center; margin-bottom: 60px; }
+    .code-header .section-sub { margin: 0 auto; }
+    .code-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(79,142,247,0.15), 0 0 0 1px var(--glass-border);
+    }
+    .code-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: #12182e;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .code-body {
+      background: #0f1626;
+      padding: 28px 32px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 2;
+    }
+    .code-body .cm { color: #546e7a; }
+    .code-body .kw { color: #c792ea; }
+    .code-body .var { color: #82aaff; }
+    .code-body .str { color: #c3e88d; }
+    .code-body .fn { color: #82aaff; }
+    .code-output {
+      background: #070d1a;
+      border-top: 1px solid var(--glass-border);
+      padding: 20px 32px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      min-height: 80px;
+      color: #c3e88d;
+      white-space: pre;
+      transition: opacity 0.3s;
+    }
+    .output-placeholder { color: var(--muted); font-style: italic; font-family: var(--font); }
+    .btn-run {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-radius: 100px;
+      background: #22c55e;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-run:hover { background: #16a34a; transform: scale(1.04); }
+
+    /* ─────────────────────────────────────────
+       MOTIVATION
+    ───────────────────────────────────────── */
+    #motivation {
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .motivation-glow {
+      position: absolute;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+    .motivation-inner { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; }
+    .motivation-quote {
+      font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--blue-light), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .motivation-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 36px;
+    }
+
+    /* ─────────────────────────────────────────
+       CTA
+    ───────────────────────────────────────── */
+    #cta { padding: 100px 0; }
+    .cta-card {
+      border-radius: 28px;
+      padding: 70px 5%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(79,142,247,0.12), rgba(168,85,247,0.12));
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      inset: -80px;
+      background: radial-gradient(ellipse at 50% 50%, rgba(79,142,247,0.18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-card h2 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .cta-card p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .cta-btns {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    /* ─────────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--glass-border);
+      background: rgba(8,12,26,0.7);
+      backdrop-filter: blur(12px);
+      padding: 40px 5%;
+    }
+    .footer-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .footer-links { display: flex; gap: 28px; list-style: none; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { color: var(--muted); font-size: 0.85rem; }
+
+    /* ─────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .what-inner { grid-template-columns: 1fr; }
+      .why-grid { grid-template-columns: 1fr 1fr; }
+      .real-grid { grid-template-columns: 1fr 1fr; }
+      .adv-list { grid-template-columns: 1fr; }
+      .nav-links { display: none; flex-direction: column; position: fixed; top: 70px; left: 0; right: 0; background: rgba(8,12,26,0.97); backdrop-filter: blur(20px); padding: 24px 5%; gap: 20px; border-bottom: 1px solid var(--glass-border); }
+      .nav-links.open { display: flex; }
+      .hamburger { display: flex; }
+    }
+    @media (max-width: 600px) {
+      .why-grid { grid-template-columns: 1fr; }
+      .real-grid { grid-template-columns: 1fr; }
+      .usage-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating orbs -->
+<div class="orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- ── Navbar ── -->
+<nav>
+  <a class="nav-logo" href="#hero">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="8" fill="url(#ng)"/>
+      <path d="M8 10h5v8H8zM15 10h5l-2.5 4 2.5 4h-5l2.5-4z" fill="white" opacity="0.9"/>
+      <defs><linearGradient id="ng" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+    </svg>
+    PyLearn
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#hero">Нүүр</a></li>
+    <li><a href="#what">Python гэж юу вэ?</a></li>
+    <li><a href="#why">Яагаад сурах вэ?</a></li>
+    <li><a href="#cta" class="btn-nav">Эхлэх</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section id="hero">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <div class="section-label reveal">Анхлан суралцагчдад зориулсан</div>
+      <h1 class="hero-title reveal">
+        Python Хэл Суралцах<br>
+        Аяллаа <span class="grad-text">Эхлүүл</span>
+      </h1>
+      <p class="hero-sub reveal">
+        Python бол хамгийн хялбар бөгөөд хүчирхэг програмчлалын хэлүүдийн нэг юм. Өнөөдрөөс эхлүүлэхэд хэзээ ч оройтоггүй.
+      </p>
+      <div class="hero-btns reveal">
+        <a href="#cta" class="btn btn-primary">
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M6 3l6 5-6 5V3z" fill="currentColor"/></svg>
+          Эхлэх
+        </a>
+        <a href="#what" class="btn btn-outline">Дэлгэрэнгүй</a>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="terminal">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot-r"></span>
+            <span class="dot-y"></span>
+            <span class="dot-g"></span>
+          </div>
+          <div class="term-title">hello.py</div>
+        </div>
+        <div class="term-body">
+          <span class="kw">print</span>(<span class="str">"Сайн байна уу, Python!"</span>)<br>
+          <span class="kw">нэр</span> = <span class="str">"Монгол"</span><br>
+          <span class="kw">print</span>(<span class="str">f"Тавтай морил, {'{'}нэр{'}'}"</span>)<br>
+          <span class="term-cursor"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── What is Python ── -->
+<section id="what">
+  <div class="container what-inner">
+    <div>
+      <div class="section-label reveal">Танилцуулга</div>
+      <h2 class="section-title reveal">Python <span class="grad-text">гэж юу вэ?</span></h2>
+      <p class="section-sub reveal" style="margin-bottom:28px;">
+        Python нь энгийн, уншихад хялбар бичиглэлтэй, дэлхийн хамгийн алдартай
+        програмчлалын хэлүүдийн нэг. Анхлан суралцагчаас эхлээд мэргэжилтэн хүртэл бүгдэд тохиромжтой.
+      </p>
+      <ul class="reveal" style="list-style:none;display:flex;flex-direction:column;gap:12px;">
+        <li style="display:flex;align-items:center;gap:10px;color:var(--muted);">
+          <svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="url(#cg)"/><path d="M5 9l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="cg" x1="0" y1="0" x2="18" y2="18"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>
+          Анхлан суралцагчдад хамгийн тохиромжтой хэл
+        </li>
+        <li style="display:flex;align-items:center;gap:10px;color:var(--muted);">
+          <svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="url(#cg2)"/><path d="M5 9l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="cg2" x1="0" y1="0" x2="18" y2="18"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>
+          Дэлхийн томоохон компаниуд ашигладаг
+        </li>
+        <li style="display:flex;align-items:center;gap:10px;color:var(--muted);">
+          <svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="url(#cg3)"/><path d="M5 9l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="cg3" x1="0" y1="0" x2="18" y2="18"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>
+          AI, вэб, тоглоом, автоматжуулалт зэрэг олон салбарт хэрэглэгддэг
+        </li>
+      </ul>
+    </div>
+    <div>
+      <div class="usage-grid">
+        <div class="usage-item glass-card reveal reveal-delay-1">
+          <div class="icon-box" style="background:rgba(79,142,247,0.15);">🌐</div>
+          Веб хөгжүүлэлт
+        </div>
+        <div class="usage-item glass-card reveal reveal-delay-2">
+          <div class="icon-box" style="background:rgba(168,85,247,0.15);">🤖</div>
+          Хиймэл оюун ухаан
+        </div>
+        <div class="usage-item glass-card reveal reveal-delay-3">
+          <div class="icon-box" style="background:rgba(79,142,247,0.15);">🎮</div>
+          Тоглоом хөгжүүлэлт
+        </div>
+        <div class="usage-item glass-card reveal reveal-delay-4">
+          <div class="icon-box" style="background:rgba(168,85,247,0.15);">⚙️</div>
+          Автоматжуулалт
+        </div>
+        <div class="usage-item glass-card reveal reveal-delay-5">
+          <div class="icon-box" style="background:rgba(79,142,247,0.15);">📊</div>
+          Өгөгдлийн шинжилгээ
+        </div>
+        <div class="usage-item glass-card reveal reveal-delay-6">
+          <div class="icon-box" style="background:rgba(168,85,247,0.15);">🛡️</div>
+          Кибер аюулгүй байдал
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Why Learn Python ── -->
+<section id="why">
+  <div class="container">
+    <div class="why-header">
+      <div class="section-label reveal">Шалтгаан</div>
+      <h2 class="section-title reveal">Яагаад Python <span class="grad-text">Сурах Хэрэгтэй Вэ?</span></h2>
+      <p class="section-sub reveal">Дэлхий даяар хамгийн их хэрэглэгддэг хэлийг сурснаар карьерийн асар их боломж нээгдэнэ.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card glass-card reveal reveal-delay-1">
+        <div class="why-icon">📖</div>
+        <h3>Сурахад хялбар</h3>
+        <p>Англи хэлтэй ижил төстэй энгийн бичиглэлтэй тул хурдан суралцана.</p>
+      </div>
+      <div class="why-card glass-card reveal reveal-delay-2">
+        <div class="why-icon">💼</div>
+        <h3>Ажлын боломж их</h3>
+        <p>Python мэддэг хөгжүүлэгчдийн цалин болон эрэлт жил ирэх тусам өсч байна.</p>
+      </div>
+      <div class="why-card glass-card reveal reveal-delay-3">
+        <div class="why-icon">🌱</div>
+        <h3>Анхлан суралцагчдад тохиромжтой</h3>
+        <p>Програмчлалын анхны хэлийг Python-оос эхлэх нь хамгийн оновчтой.</p>
+      </div>
+      <div class="why-card glass-card reveal reveal-delay-4">
+        <div class="why-icon">⚡</div>
+        <h3>Хүчирхэг сангуудтай</h3>
+        <p>NumPy, Pandas, TensorFlow зэрэг мэргэжлийн сангууд ашиглалтад бэлэн.</p>
+      </div>
+      <div class="why-card glass-card reveal reveal-delay-5">
+        <div class="why-icon">💻</div>
+        <h3>Бүх төхөөрөмж дээр ажиллана</h3>
+        <p>Windows, Mac, Linux — аль ч үйлдлийн системд асуудалгүй ажиллана.</p>
+      </div>
+      <div class="why-card glass-card reveal reveal-delay-6">
+        <div class="why-icon">👥</div>
+        <h3>Том community-тэй</h3>
+        <p>Дэлхийн хамгийн том хөгжүүлэгчдийн спилт нийгэмлэгийн нэг.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Advantages ── -->
+<section id="advantages">
+  <div class="container">
+    <div class="adv-header">
+      <div class="section-label reveal">Давуу тал</div>
+      <h2 class="section-title reveal">Python Сурснаар <span class="grad-text">Ямар Давуу Талтай Вэ?</span></h2>
+      <p class="section-sub reveal">Нэг хэлийг сурснаар нээгдэх боломжуудыг харцгаая.</p>
+    </div>
+    <div class="adv-list">
+      <div class="adv-item glass-card reveal reveal-delay-1">
+        <div class="adv-check">✓</div>
+        <div>
+          <h4>Freelance ажил хийх боломж</h4>
+          <p>Дэлхийн аль ч цэгт суугаад онлайнаар ажиллах, орлого олох боломж нээгдэнэ.</p>
+        </div>
+      </div>
+      <div class="adv-item glass-card reveal reveal-delay-2">
+        <div class="adv-check">✓</div>
+        <div>
+          <h4>Website болон App хийх боломж</h4>
+          <p>Django, Flask ашиглан хурдан, найдвартай вэб програм хөгжүүлнэ.</p>
+        </div>
+      </div>
+      <div class="adv-item glass-card reveal reveal-delay-3">
+        <div class="adv-check">✓</div>
+        <div>
+          <h4>Ажлаа автоматжуулах</h4>
+          <p>Давтагдах ажлуудыг скрипт бичиж автоматжуулан цагаа хэмнэнэ.</p>
+        </div>
+      </div>
+      <div class="adv-item glass-card reveal reveal-delay-4">
+        <div class="adv-check">✓</div>
+        <div>
+          <h4>AI болон ирээдүйн технологи</h4>
+          <p>Machine Learning болон AI хөгжүүлэлтэд хамгийн их хэрэглэгддэг хэл.</p>
+        </div>
+      </div>
+      <div class="adv-item glass-card reveal reveal-delay-5">
+        <div class="adv-check">✓</div>
+        <div>
+          <h4>Анхны хэлд тохиромжтой</h4>
+          <p>Логик сэтгэлгээ болон програмчлалын үндэс суурийг хурдан бүтээнэ.</p>
+        </div>
+      </div>
+      <div class="adv-item glass-card reveal reveal-delay-6">
+        <div class="adv-check">✓</div>
+        <div>
+          <h4>Технологийн салбарт карьер</h4>
+          <p>Нэр хүндтэй компаниудад ажлын байр нэлэнхүйд нь Python мэдлэг шаарддаг.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Real World ── -->
+<section id="real">
+  <div class="container">
+    <div class="real-header">
+      <div class="section-label reveal">Бодит ертөнц</div>
+      <h2 class="section-title reveal">Python <span class="grad-text">Бодит Амьдрал Дээр</span></h2>
+      <p class="section-sub reveal">Таны өдөр тутам хэрэглэдэг платформууд Python-оор хийгдсэн байдаг.</p>
+    </div>
+    <div class="real-grid">
+      <div class="real-card glass-card reveal reveal-delay-1">
+        <div class="real-logo">🤖</div>
+        <h3>AI системүүд</h3>
+        <p>ChatGPT, Google Bard зэрэг хиймэл оюуны бүтээлүүд Python дээр тулгуурладаг.</p>
+      </div>
+      <div class="real-card glass-card reveal reveal-delay-2">
+        <div class="real-logo">▶️</div>
+        <h3>YouTube</h3>
+        <p>Видео зөвлөмжийн алгоритм болон backend систем Python ашигладаг.</p>
+      </div>
+      <div class="real-card glass-card reveal reveal-delay-3">
+        <div class="real-logo">📸</div>
+        <h3>Instagram</h3>
+        <p>Дэлхийн хамгийн том нийгмийн сүлжээний нэг Django (Python) дээр ажилладаг.</p>
+      </div>
+      <div class="real-card glass-card reveal reveal-delay-4">
+        <div class="real-logo">⚙️</div>
+        <h3>Автоматжуулалт</h3>
+        <p>NASA, NASA зэрэг байгууллагууд дотоод процессоо Python-оор автоматжуулдаг.</p>
+      </div>
+      <div class="real-card glass-card reveal reveal-delay-5">
+        <div class="real-logo">🎮</div>
+        <h3>Тоглоом хөгжүүлэлт</h3>
+        <p>Pygame хүрээгээр 2D тоглоом хөгжүүлэх боломжтой — эхлэхэд хялбар.</p>
+      </div>
+      <div class="real-card glass-card reveal reveal-delay-6">
+        <div class="real-logo">📊</div>
+        <h3>Өгөгдлийн шинжилгээ</h3>
+        <p>Pandas болон Matplotlib ашиглан өгөгдлийг шинжлэх, дүрслэх боломжтой.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Interactive Code ── -->
+<section id="code-demo">
+  <div class="container">
+    <div class="code-header">
+      <div class="section-label reveal">Интерактив</div>
+      <h2 class="section-title reveal">Python-г <span class="grad-text">Туршиж Үзье!</span></h2>
+      <p class="section-sub reveal">Доорх товчийг дарж Python кодыг ажиллуулж үзээрэй.</p>
+    </div>
+    <div class="code-wrap reveal">
+      <div class="code-topbar">
+        <div class="term-dots">
+          <span class="dot-r"></span>
+          <span class="dot-y"></span>
+          <span class="dot-g"></span>
+        </div>
+        <button class="btn-run" onclick="runCode()">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 12 12"><path d="M3 2l7 4-7 4V2z"/></svg>
+          Ажиллуулах
+        </button>
+      </div>
+      <div class="code-body">
+        <span class="cm"># Python жишээ</span><br>
+        <span class="var">нэр</span> = <span class="str">"Монгол"</span><br>
+        <span class="fn">print</span>(<span class="str">f"Сайн байна уу, {'{'}нэр{'}'}"</span>)<br>
+        <span class="fn">print</span>(<span class="str">"Python бол хүчирхэг хэл!"</span>)<br>
+        <span class="fn">print</span>(<span class="str">"Та аль хэдийн програмч болж байна!"</span>)
+      </div>
+      <div class="code-output" id="codeOutput">
+        <span class="output-placeholder">▶ Ажиллуулах товчийг дарна уу...</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Motivation ── -->
+<section id="motivation">
+  <div class="motivation-glow"></div>
+  <div class="container motivation-inner">
+    <div class="section-label reveal" style="display:inline-block;">Урам зориг</div>
+    <h2 class="section-title reveal" style="margin-top:8px;">Та Ч Гэсэн <span class="grad-text">Чадна!</span></h2>
+    <p class="motivation-quote reveal">
+      "Өнөөдрийн анхлан суралцагч маргаашийн мэргэжилтэн болдог."
+    </p>
+    <p class="motivation-sub reveal">
+      Код бичиж сурах нь хэцүү санагдаж магадгүй ч, зөв арга барилаар хэн ч сурч чадна.
+      Алхам алхмаар явж, өдөр бүр дасгал хийгээд амжилт гарахгүй гэж байхгүй.
+    </p>
+    <a href="#cta" class="btn btn-primary reveal">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.5 4h1v4.5h-1V5zm0 5.5h1v1h-1v-1z"/></svg>
+      Өнөөдрөөс эхлэх
+    </a>
+  </div>
+</section>
+
+<!-- ── Final CTA ── -->
+<section id="cta">
+  <div class="container">
+    <div class="cta-card reveal">
+      <h2>Python Сурахад <span class="grad-text">Бэлэн Үү?</span></h2>
+      <p>Одоо эхэлвэл маргааш илүү мэддэг хүн болсон байна. Аяллаа эхлүүл!</p>
+      <div class="cta-btns">
+        <a class="btn btn-primary" data-testid="button-start-lessons" href="{% if logged_in %}{{ url_for('dashboard') }}{% else %}{{ url_for('register') }}{% endif %}">
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M6 3l6 5-6 5V3z" fill="currentColor"/></svg>
+          Хичээл Эхлэх
+        </a>
+        <a href="{{ url_for('register') }}" class="btn btn-outline" data-testid="button-register">Бүртгүүлэх</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline" style="margin-left:6px;" data-testid="button-login">Нэвтрэх</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-inner">
+    <a class="footer-logo" href="#hero">
+      <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="8" fill="url(#fg)"/>
+        <path d="M8 10h5v8H8zM15 10h5l-2.5 4 2.5 4h-5l2.5-4z" fill="white" opacity="0.9"/>
+        <defs><linearGradient id="fg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+      </svg>
+      PyLearn
+    </a>
+    <ul class="footer-links">
+      <li><a href="#hero">Нүүр</a></li>
+      <li><a href="#what">Хичээлүүд</a></li>
+      <li><a href="#why">Бидний тухай</a></li>
+      <li><a href="#cta">Холбоо барих</a></li>
+    </ul>
+    <span class="footer-copy">© 2024 PyLearn. Бүх эрх хуулиар хамгаалагдсан.</span>
+  </div>
+</footer>
+
+<script>
+  // ── Hamburger ──
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+
+  // ── Scroll-reveal (Intersection Observer) ──
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => observer.observe(el));
+
+  // ── Active nav link on scroll ──
+  const sections = document.querySelectorAll('section[id]');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 100) current = s.getAttribute('id');
+    });
+    document.querySelectorAll('.nav-links a').forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--text)' : '';
+    });
+  });
+
+  // ── Interactive code runner ──
+  function runCode() {
+    const out = document.getElementById('codeOutput');
+    out.innerHTML = '';
+    const lines = [
+      'Сайн байна уу, Монгол',
+      'Python бол хүчирхэг хэл!',
+      'Та аль хэдийн програмч болж байна!'
+    ];
+    let lineIdx = 0;
+    let charIdx = 0;
+    let text = '';
+
+    const btn = document.querySelector('.btn-run');
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+
+    function type() {
+      if (lineIdx >= lines.length) {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        // Add a blinking cursor at the end
+        out.innerHTML = text + '<span style="display:inline-block;width:8px;height:1em;background:#c3e88d;vertical-align:text-bottom;animation:blink 1s step-end infinite;margin-left:2px;"></span>';
+        return;
+      }
+      const line = lines[lineIdx];
+      if (charIdx === 0 && lineIdx === 0) {
+        text += '> ';
+      } else if (charIdx === 0) {
+        text += '\n> ';
+      }
+      if (charIdx < line.length) {
+        text += line[charIdx];
+        charIdx++;
+        out.textContent = text;
+        setTimeout(type, 30);
+      } else {
+        lineIdx++;
+        charIdx = 0;
+        setTimeout(type, 120);
+      }
+    }
+
+    setTimeout(type, 200);
+  }
+</script>
+</body>
+</html>
