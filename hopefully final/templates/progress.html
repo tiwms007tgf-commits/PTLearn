@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Progress - PyLearn{% endblock %}
+
+{% block content %}
+<div class="progress-page">
+    <div class="header">
+        <h1>📈 Таны гүйцэтгэл</h1>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-list">
+            {% for item in progress_data %}
+            <div class="progress-item {% if item.completed %}completed{% endif %}">
+                <div class="progress-item-header">
+                    <h3>{{ item.lesson.title }}</h3>
+                    {% if item.completed %}
+                    <span class="badge completed">✓ Гүйцэтгэсэн</span>
+                    {% else %}
+                    <span class="badge pending">✓ Эхлээгүй</span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('lesson', lesson_id=item.lesson.id) }}" class="btn btn-small">
+                    {% if item.completed %}View{% else %}Start{% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-page { padding: 30px; max-width: 700px; }
+.header { margin-bottom: 30px; }
+
+.progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.progress-item {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #eee;
+    width: 1500px;
+}
+
+.progress-item.completed {
+    background: #f0fdf4;
+    border-color: #4caf50;
+}
+
+.progress-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.progress-item-header h3 {
+    margin: 0;
+}
+
+.badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.badge.completed {
+    background: #4caf50;
+    color: white;
+}
+
+.badge.pending {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9em;
+}
+</style>
+{% endblock %}

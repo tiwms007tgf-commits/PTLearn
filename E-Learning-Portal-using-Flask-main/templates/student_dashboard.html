@@ -1,0 +1,130 @@
+{% extends "base1.html" %}
+
+{% block content %}
+<style>
+    .card-custom {
+    max-width: 400px; 
+    margin: 0 auto;
+    border: none; 
+    border-radius: 15px; 
+    box-shadow: 0px 5px 15px 0px rgba(0,0,0,0.2); 
+    }
+</style>
+<div class="container">
+    <h1>Welcome to the Student Dashboard</h1>
+
+    <form method="POST" action="/student_dashboard" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search_query" class="form-control" placeholder="Search for a course">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
+    {% if search_results %}
+<div class="container">
+    <h2 class="mt-4">Search Results</h2>
+    <div class="row">
+        {% for course in search_results %}
+        <div class="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <div class="course-card card-custom">
+                <div class="course-image mb-3">
+                    <img src="https://img.freepik.com/premium-vector/animator-cartoon-character-set-sitting-worker-motioner-designer-computer-after-effects-timelin_634868-1.jpg" alt="Course Image" class="card-custom" width="400px">
+                </div>
+                <div class="course-details mb-4">
+                    <h3 class="px-3">{{ course.title }}</h3>
+                    <p class="px-3"><strong>Category:</strong> {{ course.category }}</p>
+                    <p class="px-3">{{ course.summary }}</p>
+                    <p><i class="fas fa-dollar-sign px-3"></i> Price: ${{ course.price }}</p>
+                    <p><i class="far fa-clock px-2"></i> Duration: {{ course.duration }}</p>
+                    <a href="/course/{{ course.id }}" class="btn btn-primary mb-3 mt-3 mx-2">Learn More</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+    <h2 class="mt-4">Enrolled Courses</h2>
+    <div id="enrolledCourseCarousel" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            {% if not ecourses %}
+            <p>Not enrolled in any course at the moment.</p>
+            {% else %}
+            {% for course in ecourses %}
+                {% if loop.index % 2 == 1 %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="row">
+                {% endif %}
+                <div class="col-lg-6 col-md-6 col-sm-12 mb-4">
+                    <div class="course-card card-custom">
+                        <div class="course-image mb-3">
+                            <img src="https://img.freepik.com/premium-vector/animator-cartoon-character-set-sitting-worker-motioner-designer-computer-after-effects-timelin_634868-1.jpg" alt="Course Image" class="card-custom">
+                        </div>
+                        <div class="course-details mb-4">
+                            <h3 class="px-3">{{ course.title }}</h3>
+                            <p class="px-3"><strong>Category:</strong> {{ course.category }}</p>
+                            <p class="px-3">{{ course.summary }}</p>
+                            <p><i class="fas fa-check-circle px-3"></i> Enrolled</p>
+                            <p><i class="far fa-clock px-2"></i> Duration: {{ course.duration }}</p>
+                            <a href="/course/{{ course.id }}" class="btn btn-primary mb-3 mt-3 mx-2">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+                {% if loop.index % 2 == 0 or loop.last %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+        </div>
+        <a class="carousel-control-prev" href="#enrolledCourseCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#enrolledCourseCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+
+    <h2 class="mt-4">All Courses</h2>
+    <div id="courseCarousel" class="carousel slide mb-5" data-ride="carousel">
+        <div class="carousel-inner">
+            {% for course in courses %}
+                {% if loop.index % 2 == 1 %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="row">
+                {% endif %}
+                <div class="col-lg-6 col-md-6 col-sm-12 mb-4">
+                    <div class="course-card card-custom">
+                        <div class="course-image mb-3">
+                            <img src="https://img.freepik.com/premium-vector/animator-cartoon-character-set-sitting-worker-motioner-designer-computer-after-effects-timelin_634868-1.jpg" alt="Course Image" class="card-custom" width="400px">
+                        </div>
+                        <div class="course-details mb-4">
+                            <h3 class="px-3">{{ course.title }}</h3>
+                            <p class="px-3"><strong>Category:</strong> {{ course.category }}</p>
+                            <p class="px-3">{{ course.summary }}</p>
+                            <p><i class="fas fa-dollar-sign px-3"></i> Price: ${{ course.price }}</p>
+                            <p><i class="far fa-clock px-2"></i> Duration: {{ course.duration }}</p>
+                            <a href="/course/{{ course.id }}" class="btn btn-primary mb-3 mt-3 mx-2">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+                {% if loop.index % 2 == 0 or loop.last %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <a class="carousel-control-prev" href="#courseCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#courseCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PythonLearn - Master Python with Gamification{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <script>
+        // Theme detection
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 
+                         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.body.classList.remove('light-mode');
+            } else {
+                document.body.classList.add('light-mode');
+                document.body.classList.remove('dark-mode');
+            }
+        }
+        initTheme();
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">🐍 PythonLearn</h2>
+                <button class="sidebar-close" id="sidebarClose">✕</button>
+            </div>
+            
+            {% if current_user.is_authenticated %}
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{{ url_for('progress.dashboard') }}" class="nav-link">📊 Dashboard</a></li>
+                    <li><a href="{{ url_for('lessons.index') }}" class="nav-link">📚 Lessons</a></li>
+                    <li><a href="{{ url_for('quizzes.index') }}" class="nav-link">📝 Quizzes</a></li>
+                    <li><a href="{{ url_for('code_lab.index') }}" class="nav-link">💻 Code Lab</a></li>
+                    <li><a href="{{ url_for('progress.analytics') }}" class="nav-link">📈 Progress</a></li>
+                    <li><a href="{{ url_for('progress.achievements') }}" class="nav-link">🏆 Achievements</a></li>
+                    <li><a href="{{ url_for('auth.profile') }}" class="nav-link">👤 Profile</a></li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+            </div>
+            {% else %}
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{{ url_for('auth.login') }}" class="nav-link">Login</a></li>
+                    <li><a href="{{ url_for('auth.register') }}" class="nav-link">Register</a></li>
+                </ul>
+            </nav>
+            {% endif %}
+        </aside>
+        
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation Bar -->
+            <nav class="navbar">
+                <div class="navbar-left">
+                    <button class="hamburger" id="hamburger">☰</button>
+                    <h1 class="navbar-title">{% block page_title %}{% endblock %}</h1>
+                </div>
+                
+                <div class="navbar-right">
+                    {% if current_user.is_authenticated %}
+                    <div class="user-menu">
+                        <button class="user-avatar" id="userMenuBtn">
+                            <div class="avatar" style="background-color: {{ current_user.avatar_color }}">
+                                {{ current_user.username[0].upper() }}
+                            </div>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-info">
+                                <p class="user-name">{{ current_user.display_name }}</p>
+                                <p class="user-email">{{ current_user.email }}</p>
+                            </div>
+                            <hr>
+                            <a href="{{ url_for('auth.profile') }}">Profile Settings</a>
+                            <a href="#" id="themeToggle">🌙 Dark Mode</a>
+                            <hr>
+                            <a href="{{ url_for('auth.logout') }}">Logout</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </nav>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'message' else category }} animate-slide-in">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="levelUpModal" style="display: none;">
+        <div class="modal-content level-up-modal">
+            <button class="modal-close" id="levelUpClose">✕</button>
+            <div class="modal-header">
+                <h2>🎉 Level Up!</h2>
+            </div>
+            <div class="modal-body">
+                <p class="level-text">You reached <strong>Level <span id="newLevel">0</span></strong></p>
+                <p class="xp-text">+<span id="xpGained">0</span> XP</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeLevelUpModal()">Awesome!</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // Initialize theme toggle
+        document.getElementById('themeToggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const isDark = document.body.classList.contains('dark-mode');
+            const newTheme = isDark ? 'light' : 'dark';
+            
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', newTheme);
+            
+            this.textContent = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+        
+        // Initialize hamburger menu
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.add('active');
+        });
+        
+        document.getElementById('sidebarClose').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.remove('active');
+        });
+        
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.remove('active');
+        });
+        
+        // User menu toggle
+        document.getElementById('userMenuBtn').addEventListener('click', function() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        });
+        
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.user-menu')) {
+                document.getElementById('userDropdown').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

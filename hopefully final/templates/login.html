@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Нэвтрэх - PyLearn{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>🐍 PyLearn</h1>
+        <h2>Сайн байна уу!</h2>
+        
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label>Хэрэглэгчийн нэр</label>
+                <input type="text" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Нууц үг</label>
+                <input type="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">Нэвтрэх</button>
+        </form>
+        
+        <p class="auth-link">Бүртгэлгүй юу? <a href="{{ url_for('register') }}">Бүртгүүлэх</a></p>
+    </div>
+</div>
+{% endblock %}

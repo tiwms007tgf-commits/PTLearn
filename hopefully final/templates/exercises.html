@@ -1,0 +1,854 @@
+{% extends "base.html" %}
+
+{% block title %}Exercises - PyLearn{% endblock %}
+
+{% block content %}
+<div class="exercises-page">
+    <div class="header">
+        <h1>🏋️ Дадлагууд</h1>
+        <p>Python-г хичээллэж, кодыг гүйцэтгэх</p>
+    </div>
+    
+    <div class="exercises-container">
+        <div class="exercises-sidebar">
+            <h3>Боломжит дадлагууд</h3>
+            <div class="exercise-list">
+                {% for exercise in exercises %}
+                <button class="exercise-btn {% if loop.first %}active{% endif %}" 
+                    data-exercise-id="{{ exercise.id }}">
+                    <span class="exercise-number">{{ loop.index }}</span>
+                    <span class="exercise-title">{{ exercise.title }}</span>
+                    <span class="exercise-difficulty" style="background: {% if exercise.difficulty == 'Easy' %}#4caf50{% elif exercise.difficulty == 'Medium' %}#ff9800{% else %}#f44336{% endif %};">{{ exercise.difficulty }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="exercise-content">
+            <div id="exerciseArea">
+                <!-- Exercise loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentExerciseId = null;
+
+// Exercise data
+const exercisesData = [
+    {% for exercise in exercises %}
+    {
+        id: {{ exercise.id }},
+        title: '{{ exercise.title | safe }}',
+        description: '{{ exercise.description | safe }}',
+        starterCode: `{{ exercise.starter_code | safe }}`,
+        solution: `{{ exercise.solution | safe }}`,
+        testCases: {{ exercise.test_cases | tojson }},
+        xpReward: {{ exercise.xp_reward }}
+    }{{ ',' if not loop.last else '' }}
+    {% endfor %}
+];
+
+function loadExercise(id, title, description, starterCode, solution, xpReward) {
+    currentExerciseId = id;
+    const exercise = exercisesData.find(e => e.id === id);
+    
+    document.querySelectorAll('.exercise-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const activeButton = document.querySelector(`[data-exercise-id="${id}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+    
+    const exerciseArea = document.getElementById('exerciseArea');
+    exerciseArea.innerHTML = `
+        <div class="exercise-card">
+            <div class="exercise-header">
+                <h2>${title}</h2>
+                <span class="xp-badge">${xpReward} XP</span>
+            </div>
+            
+            <div class="exercise-description">
+                ${description}
+            </div>
+            
+            <div class="exercise-workspace">
+                <div class="editor-container">
+                    <h3>Таны код</h3>
+                    <textarea id="exerciseCode" placeholder="Хариугаа энд бичнэ үү...">${starterCode}</textarea>
+                    <div class="editor-buttons">
+                        <button class="btn btn-primary" onclick="runExerciseCode()">▶ Код ажиллуулах</button>
+                        <button class="btn btn-secondary" onclick="showSolution()">💡 Зөвлөгөө</button>
+                        <button class="btn btn-reset" onclick="resetExerciseCode('${starterCode}')">🔄 Дахин эхлүүлэх</button>
+                    </div>
+                </div>
+                
+                <div class="output-container">
+                    <h3>Output</h3>
+                    <pre id="exerciseOutput" class="output-box">"Код ажиллуулах" дээр дарж үр дүнг харна...</pre>
+                    <div id="testResults" class="test-results"></div>
+                </div>
+            </div>
+            
+            <div id="solutionBox" class="solution-box" style="display: none;">
+                <h3>Solution</h3>
+                <pre>${solution}</pre>
+                <button class="btn btn-primary" onclick="hideSolution()">Зөвлөгөө нуух</button>
+            </div>
+        </div>
+    `;
+}
+
+function runExerciseCode() {
+    const code = document.getElementById('exerciseCode').value;
+    const outputBox = document.getElementById('exerciseOutput');
+    const testResults = document.getElementById('testResults');
+    
+    if (!currentExerciseId) {
+        outputBox.textContent = 'Алдаа: Сүнслэг дасгал сонгогдоогүй байна.';
+        return;
+    }
+    
+    outputBox.textContent = 'Executing...';
+    testResults.innerHTML = '';
+    
+    fetch('{{ url_for("run_exercise") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'code=' + encodeURIComponent(code) + '&exercise_id=' + encodeURIComponent(currentExerciseId || '')
+    })
+    .then(response => response.json())
+    .then(data => {
+        outputBox.textContent = data.output;
+        
+        if (data.test_results) {
+            displayTestResults(data.test_results);
+        }
+        
+        if (data.all_passed) {
+            testResults.innerHTML += '<div class="test-success">✅ All tests passed! +' + data.xp_earned + ' XP earned!</div>';
+            createConfetti();
+        }
+    })
+    .catch(error => {
+        outputBox.textContent = 'Error: ' + error.message;
+    });
+}
+
+function createConfetti() {
+    for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDuration = (Math.random() * 1 + 1.5) + 's';
+        confetti.style.background = ['#667eea', '#764ba2', '#22c55e', '#f59e0b'][i % 4];
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 3000);
+    }
+}
+
+function displayTestResults(results) {
+    const testResults = document.getElementById('testResults');
+    let html = '<h4>Test Results:</h4>';
+    
+    results.forEach(test => {
+        html += `
+            <div class="test-case ${test.passed ? 'passed' : 'failed'}">
+                <span class="test-icon">${test.passed ? '✓' : '✗'}</span>
+                <span class="test-name">${test.name}</span>
+                ${!test.passed ? `<span class="test-error">${test.error}</span>` : ''}
+            </div>
+        `;
+    });
+    
+    testResults.innerHTML = html;
+}
+
+function showSolution() {
+    document.getElementById('solutionBox').style.display = 'block';
+}
+
+function hideSolution() {
+    document.getElementById('solutionBox').style.display = 'none';
+}
+
+function resetExerciseCode(starterCode) {
+    document.getElementById('exerciseCode').value = starterCode;
+    document.getElementById('exerciseOutput').textContent = 'Click "Run Code" to execute...';
+    document.getElementById('testResults').innerHTML = '';
+}
+
+// Load first exercise on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const firstExercise = exercisesData[0];
+    if (firstExercise) {
+        loadExercise(
+            firstExercise.id,
+            firstExercise.title,
+            firstExercise.description,
+            firstExercise.starterCode,
+            firstExercise.solution,
+            firstExercise.xpReward
+        );
+    }
+
+    // attach click handlers to sidebar buttons (avoid fragile inline onclick with unescaped strings)
+    document.querySelectorAll('.exercise-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.exerciseId, 10);
+            const ex = exercisesData.find(e => e.id === id);
+            if (ex) {
+                loadExercise(ex.id, ex.title, ex.description, ex.starterCode, ex.solution, ex.xpReward);
+            }
+        });
+    });
+});
+
+// Allow Ctrl+Enter to run code
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter' && document.getElementById('exerciseCode')) {
+        runExerciseCode();
+    }
+});
+</script>
+
+<style>
+/* ===== EXERCISES PAGE - COMPLETE CSS ===== */
+
+/* ROOT WRAPPER - Ensures full width containment */
+.exercises-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    display: block;
+}
+
+/* MAIN PAGE CONTAINER - Full width, stacked layout */
+.exercises-page {
+    width: 100%;
+    max-width: 100%;
+    padding: 30px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* HEADER - Full width at top */
+.header {
+    width: 100%;
+    margin: 0 0 30px 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin: 0 0 10px 0;
+    padding: 0;
+    color: #333;
+    font-weight: 700;
+}
+
+.header p {
+    color: #888;
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+}
+
+/* MAIN EXERCISES CONTAINER - Grid layout */
+.exercises-container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 30px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* SIDEBAR */
+.exercises-sidebar {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    box-sizing: border-box;
+}
+
+.exercises-sidebar h3 {
+    margin: 0 0 15px 0;
+    padding: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+}
+
+.exercise-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exercise-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f9f9f9;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+    text-align: left;
+    font-family: inherit;
+    font-weight: 500;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.exercise-btn:hover {
+    background: #f0f8ff;
+    border-color: #667eea;
+    transform: translateX(4px);
+}
+
+.exercise-btn.active {
+    background: #f0f8ff;
+    border-color: #667eea;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.exercise-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.85em;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.exercise-title {
+    flex: 1;
+    word-break: break-word;
+    margin: 0;
+    padding: 0;
+}
+
+.exercise-difficulty {
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.75em;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+/* EXERCISE CONTENT */
+.exercise-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.exercise-card {
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+.exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 20px 0;
+    padding: 0;
+    width: 100%;
+    gap: 20px;
+}
+
+.exercise-header h2 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #333;
+    flex: 1;
+}
+
+.xp-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.exercise-description {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 0 0 30px 0;
+    line-height: 1.8;
+    color: #444;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.exercise-description h4 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    color: #333;
+    font-weight: 600;
+}
+
+.exercise-description ul {
+    margin: 10px 0;
+    padding-left: 25px;
+    color: #444;
+}
+
+.exercise-description li {
+    margin: 5px 0;
+    padding: 0;
+}
+
+.exercise-description code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #667eea;
+    font-size: 0.9em;
+}
+
+/* EXERCISE WORKSPACE - Two column layout */
+.exercise-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 0 0 30px 0;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* EDITOR AND OUTPUT CONTAINERS */
+.editor-container,
+.output-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.editor-container h3,
+.output-container h3 {
+    margin: 0 0 12px 0;
+    padding: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+}
+
+/* CODE TEXTAREA */
+#exerciseCode {
+    flex: 1;
+    min-height: 350px;
+    padding: 15px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'JetBrains Mono', monospace;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    line-height: 1.6;
+    background: white;
+    color: #333;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+#exerciseCode:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* EDITOR BUTTONS */
+.editor-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0 0 0;
+    padding: 0;
+}
+
+.editor-buttons .btn {
+    flex: 1;
+}
+
+/* BUTTONS */
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.95em;
+    font-family: inherit;
+    box-sizing: border-box;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #f57c00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.btn-reset {
+    background: #757575;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #616161;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(117, 117, 117, 0.3);
+}
+
+/* OUTPUT BOX */
+.output-box {
+    flex: 1;
+    min-height: 350px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'JetBrains Mono', monospace;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    border: 1px solid #333;
+    margin: 0;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* TEST RESULTS */
+.test-results {
+    margin: 15px 0 0 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.test-results h4 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    font-size: 1em;
+    font-weight: 600;
+    color: #333;
+}
+
+.test-case {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    margin: 0 0 8px 0;
+    border-radius: 5px;
+    font-size: 0.9em;
+    box-sizing: border-box;
+}
+
+.test-case.passed {
+    background: #f0fdf4;
+    color: #22c55e;
+    border-left: 3px solid #22c55e;
+}
+
+.test-case.failed {
+    background: #fef2f2;
+    color: #ef4444;
+    border-left: 3px solid #ef4444;
+}
+
+.test-icon {
+    font-weight: bold;
+    font-size: 1.1em;
+    flex-shrink: 0;
+}
+
+.test-name {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.test-error {
+    font-size: 0.85em;
+    opacity: 0.8;
+    margin: 0;
+    padding: 0;
+}
+
+.test-success {
+    background: #f0fdf4;
+    color: #22c55e;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    margin: 10px 0 0 0;
+    box-sizing: border-box;
+}
+
+/* SOLUTION BOX */
+.solution-box {
+    background: #fef9e7;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 0 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.solution-box h3 {
+    margin: 0 0 15px 0;
+    padding: 0;
+    color: #f57f17;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.solution-box pre {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #ffc107;
+    margin: 0 0 15px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    box-sizing: border-box;
+    color: #333;
+}
+
+.solution-box .btn {
+    width: 100%;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* TABLET - 1024px and below */
+@media (max-width: 1200px) {
+    .exercise-workspace {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* TABLET - 1024px and below */
+@media (max-width: 1024px) {
+    .exercises-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .exercises-sidebar {
+        grid-column: 1;
+        position: static;
+    }
+}
+
+/* MOBILE - 768px and below */
+@media (max-width: 768px) {
+    .exercises-page {
+        padding: 15px;
+        margin-left: 0;
+    }
+
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .header p {
+        font-size: 0.9em;
+    }
+
+    .exercises-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .exercise-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .exercise-header h2 {
+        font-size: 1.5em;
+    }
+
+    .editor-buttons {
+        flex-direction: column;
+    }
+
+    .exercise-workspace {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .exercise-card {
+        padding: 15px;
+    }
+
+    .exercise-description {
+        padding: 15px;
+        font-size: 0.95em;
+    }
+
+    #exerciseCode {
+        min-height: 250px;
+        font-size: 12px;
+    }
+
+    .output-box {
+        min-height: 250px;
+        font-size: 12px;
+    }
+
+    .solution-box {
+        padding: 15px;
+    }
+
+    .solution-box pre {
+        font-size: 11px;
+    }
+}
+
+/* SMALL MOBILE - 480px and below */
+@media (max-width: 480px) {
+    .exercises-page {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    .header p {
+        font-size: 0.85em;
+    }
+
+    .exercise-card {
+        padding: 10px;
+    }
+
+    .exercise-header {
+        gap: 8px;
+    }
+
+    .exercise-header h2 {
+        font-size: 1.3em;
+    }
+
+    .xp-badge {
+        padding: 6px 12px;
+        font-size: 0.8em;
+    }
+
+    .exercise-description {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    #exerciseCode,
+    .output-box {
+        min-height: 200px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+
+    .editor-buttons {
+        gap: 5px;
+    }
+}
+
+/* ===== UTILITIES ===== */
+
+/* Ensure no horizontal scroll */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* Box sizing for all elements */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Remove default margins */
+p, h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+</style>
+{% endblock %}

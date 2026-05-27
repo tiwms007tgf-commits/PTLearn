@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Python Learning Platform{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body {% if session.get('user_id') and not (hide_sidebar|default(false)) %}class="logged-in"{% endif %}>
+
+    <!-- SIDEBAR (only shows when logged in) -->
+    {% if session.get('user_id') and not (hide_sidebar|default(false)) %}
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🐍</div>
+            <div>
+                <p class="brand-kicker">Стильтэйгээр сурацгаая</p>
+                <h2>PyLearn</h2>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-link">
+                <span class="icon">📊</span>
+                <span class="nav-label">Нүүр</span>
+            </a>
+            <a href="{{ url_for('dashboard') }}#lessons" class="nav-link">
+                <span class="icon">📚</span>
+                <span class="nav-label">Хичээлүүд</span>
+            </a>
+            <a href="{{ url_for('code_lab') }}" class="nav-link">
+                <span class="icon">💻</span>
+                <span class="nav-label">Код лаборатори</span>
+            </a>
+            <a href="{{ url_for('exercises') }}" class="nav-link">
+                <span class="icon">🏋️</span>
+                <span class="nav-label">Дадлагууд</span>
+            </a>
+            <a href="{{ url_for('progress') }}" class="nav-link">
+                <span class="icon">📈</span>
+                <span class="nav-label">Гүйцэтгэл</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <p class="user-tag">Нэвтэрсэн</p>
+                <p class="user-name">Хэрэглэгч {{ session.get('user_id') }}</p>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Гарах</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- MAIN CONTENT (ALWAYS SHOWS) -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PythonLearn{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="welcome-section mb">
+        <h2>Welcome back, {{ current_user.display_name }}! 👋</h2>
+        <p class="text-muted">Keep up your streak and keep learning</p>
+    </div>
+    
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-2 mb">
+        <!-- Level & XP Card -->
+        <div class="card hover-lift">
+            <div class="card-header">
+                <h3>📊 Level & XP</h3>
+            </div>
+            <div class="card-body">
+                <div class="stat-large">
+                    <div class="level-badge" style="background: linear-gradient(135deg, {{ current_user.avatar_color }}, #818cf8);">
+                        {{ user.level }}
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-label">Current Level</p>
+                        <p class="stat-value">{{ user.total_xp }} XP</p>
+                    </div>
+                </div>
+                
+                <div class="progress-section mt">
+                    <div class="progress-header">
+                        <span class="text-sm">Progress to Level {{ user.level + 1 }}</span>
+                        <span class="text-sm font-bold">{{ (user.get_xp_progress().percentage|int) }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {{ user.get_xp_progress().percentage }}%"></div>
+                    </div>
+                    <p class="text-xs text-muted">
+                        {{ user.get_xp_progress().current }} / {{ user.get_xp_progress().needed }} XP
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Streak Card -->
+        <div class="card hover-lift">
+            <div class="card-header">
+                <h3>🔥 Streak & Milestones</h3>
+            </div>
+            <div class="card-body">
+                <div class="stat-large">
+                    <div class="streak-badge">
+                        {{ user.current_streak }}
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-label">Current Streak</p>
+                        <p class="stat-value">{{ user.longest_streak }} Personal Best</p>
+                    </div>
+                </div>
+                
+                <div class="stat-row mt">
+                    <div class="stat-item">
+                        <p class="text-xs text-muted">Lessons Completed</p>
+                        <p class="stat-number">{{ learning_stats.completed_lessons }}</p>
+                    </div>
+                    <div class="stat-item">
+                        <p class="text-xs text-muted">Quizzes Passed</p>
+                        <p class="stat-number">{{ quiz_stats.passed }}</p>
+                    </div>
+                    <div class="stat-item">
+                        <p class="text-xs text-muted">Achievements</p>
+                        <p class="stat-number">{{ achievements|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Learning Progress Card -->
+    <div class="card mb">
+        <div class="card-header">
+            <h3>📚 Learning Progress</h3>
+            <a href="{{ url_for('lessons.index') }}" class="btn btn-sm btn-primary">Continue Learning →</a>
+        </div>
+        <div class="card-body">
+            <div class="progress-item">
+                <div class="progress-label">
+                    <span>Lesson Completion</span>
+                    <span class="badge badge-primary">{{ learning_stats.completed_lessons }}/{{ learning_stats.total_lessons }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ learning_stats.completion_percentage }}%"></div>
+                </div>
+                <p class="text-xs text-muted">{{ learning_stats.completion_percentage }}% complete</p>
+            </div>
+            
+            <div class="progress-item mt">
+                <div class="progress-label">
+                    <span>Quiz Success Rate</span>
+                    <span class="badge badge-success">{{ quiz_stats.passed }}/{{ quiz_stats.total_quizzes }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ quiz_stats.passed_percentage }}%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+                </div>
+                <p class="text-xs text-muted">{{ quiz_stats.passed_percentage }}% pass rate</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activity Grid -->
+    <div class="grid grid-2">
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h3>⚡ Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                {% if xp_history %}
+                <div class="activity-list">
+                    {% for activity in xp_history[:5] %}
+                    <div class="activity-item">
+                        <div class="activity-icon">{{ activity.badge }}</div>
+                        <div class="activity-content">
+                            <p class="activity-title">+{{ activity.amount }} XP</p>
+                            <p class="text-xs text-muted">{{ activity.time_ago }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('progress.analytics') }}" class="btn btn-ghost btn-sm mt">View All →</a>
+                {% else %}
+                <p class="text-muted">No activity yet. Start a lesson to earn XP!</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Recent Achievements -->
+        <div class="card">
+            <div class="card-header">
+                <h3>🏆 Recent Achievements</h3>
+            </div>
+            <div class="card-body">
+                {% if achievements %}
+                <div class="achievement-list">
+                    {% for achievement in achievements[:3] %}
+                    <div class="achievement-item">
+                        <div class="achievement-icon">{{ achievement.icon }}</div>
+                        <div class="achievement-content">
+                            <p class="achievement-title">{{ achievement.title }}</p>
+                            <p class="text-xs text-muted">{{ achievement.description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('progress.achievements') }}" class="btn btn-ghost btn-sm mt">View All →</a>
+                {% else %}
+                <p class="text-muted">Unlock achievements by completing lessons and quizzes!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.welcome-section {
+    padding: var(--spacing-xl) 0;
+}
+
+.stat-large {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.level-badge {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: white;
+    box-shadow: var(--shadow-lg);
+}
+
+.streak-badge {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+    font-size: var(--text-lg);
+    font-weight: 700;
+}
+
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+.progress-section {
+    margin-top: var(--spacing-lg);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+}
+
+.progress-item {
+    padding-bottom: var(--spacing-lg);
+}
+
+.progress-item:last-child {
+    padding-bottom: 0;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.activity-list,
+.achievement-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.activity-item,
+.achievement-item {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.activity-item:hover,
+.achievement-item:hover {
+    background-color: var(--border-color);
+}
+
+.activity-icon,
+.achievement-icon {
+    font-size: var(--text-2xl);
+    min-width: 40px;
+    text-align: center;
+}
+
+.activity-content,
+.achievement-content {
+    flex: 1;
+}
+
+.activity-title,
+.achievement-title {
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+@media (max-width: 768px) {
+    .stat-large {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stat-row {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

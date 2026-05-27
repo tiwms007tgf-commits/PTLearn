@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Code Lab - PyLearn{% endblock %}
+
+{% block content %}
+<div class="code-lab">
+    <div class="header">
+        <h1>💻 Code Lab</h1>
+        <p>Write and execute Python code</p>
+    </div>
+    
+    <div class="code-lab-container">
+        <div class="editor-section">
+            <h3>Python Code</h3>
+            <textarea id="codeInput" placeholder="# Write your Python code here
+# Example:
+print('Hello, World!')
+
+for i in range(5):
+    print(i)"></textarea>
+            <button class="btn btn-primary" onclick="runCode()">▶ Run Code</button>
+        </div>
+        
+        <div class="output-section">
+            <h3>Output</h3>
+            <pre id="output" class="output-box">Click "Run Code" to see output...</pre>
+        </div>
+    </div>
+    
+    <div class="examples">
+        <h3>💡 Quick Examples</h3>
+        <button class="example-btn" onclick="loadExample('hello')">Hello World</button>
+        <button class="example-btn" onclick="loadExample('loop')">For Loop</button>
+        <button class="example-btn" onclick="loadExample('function')">Function</button>
+        <button class="example-btn" onclick="loadExample('list')">List Operations</button>
+    </div>
+</div>
+
+<script>
+function runCode() {
+    const code = document.getElementById('codeInput').value;
+    const outputBox = document.getElementById('output');
+    
+    outputBox.textContent = 'Executing...';
+    
+    fetch('{{ url_for("code_lab") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'code=' + encodeURIComponent(code)
+    })
+    .then(response => response.json())
+    .then(data => {
+        outputBox.textContent = data.output;
+    })
+    .catch(error => {
+        outputBox.textContent = 'Error: ' + error.message;
+    });
+}
+
+function loadExample(type) {
+    const examples = {
+        hello: `print('Hello, World!')`,
+        loop: `for i in range(1, 6):
+    print(f'{i} * 2 = {i * 2}')`,
+        function: `def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+print(factorial(5))`,
+        list: `numbers = [1, 2, 3, 4, 5]
+squared = [x**2 for x in numbers]
+print(squared)`
+    };
+    
+    document.getElementById('codeInput').value = examples[type] || '';
+}
+
+// Allow Ctrl+Enter to run code
+document.getElementById('codeInput').addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        runCode();
+    }
+});
+</script>
+
+<style>
+.code-lab { padding: 30px; }
+.header { margin-bottom: 30px; }
+
+.code-lab-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .code-lab-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.editor-section, .output-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+#codeInput {
+    width: 100%;
+    height: 300px;
+    padding: 15px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.output-box {
+    height: 300px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.examples {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.example-btn {
+    background: #f0f8ff;
+    border: 1px solid #667eea;
+    color: #667eea;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.example-btn:hover {
+    background: #667eea;
+    color: white;
+}
+</style>
+{% endblock %}

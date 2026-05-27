@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} - PyLearn{% endblock %}
+
+{% block content %}
+<div class="lesson-page">
+    <div class="lesson-header">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
+        <h1>{{ lesson.title }}</h1>
+    </div>
+    
+    <div class="lesson-content">
+        <div class="content-section">
+            <h2>Learn</h2>
+            <div class="lesson-text">
+                {{ lesson.content | safe }}
+            </div>
+        </div>
+        
+        <div class="code-section">
+            <h2>Code Example</h2>
+            <pre><code>{{ lesson.code_example }}</code></pre>
+        </div>
+        
+        {% if lesson.quizzes %}
+        <div class="quiz-section">
+            <h2>Test Your Knowledge</h2>
+            <div class="quiz-list">
+                {% for quiz in lesson.quizzes %}
+                <a href="{{ url_for('quiz', quiz_id=quiz.id) }}" class="quiz-btn">
+                    Quiz: {{ quiz.question[:50] }}...
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if next_lesson %}
+    <div class="next-lesson">
+        <a href="{{ url_for('lesson', lesson_id=next_lesson.id) }}" class="btn btn-primary">
+            Next Lesson: {{ next_lesson.title }} →
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.lesson-page { padding: 30px; max-width: 900px; }
+.lesson-header { margin-bottom: 30px; }
+.back-btn { color: #667eea; text-decoration: none; margin-bottom: 15px; display: inline-block; }
+.lesson-header h1 { margin: 15px 0 0 0; }
+
+.lesson-content {
+    display: grid;
+    gap: 30px;
+}
+
+.content-section, .code-section, .quiz-section {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.lesson-text {
+    line-height: 1.8;
+    color: #444;
+}
+
+.lesson-text ul {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.lesson-text li {
+    margin: 8px 0;
+}
+
+.code-section pre {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.quiz-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quiz-btn {
+    padding: 15px;
+    background: #f0f8ff;
+    border: 2px solid #667eea;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #667eea;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.quiz-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.next-lesson {
+    text-align: center;
+    margin-top: 30px;
+}
+</style>
+{% endblock %}
